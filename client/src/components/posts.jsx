@@ -17,7 +17,7 @@ const Posts = (props) => {
           <br />
           <small className="overflow-hidden">{post.description}</small>
           <div className="mt-1">
-            Related Topics:
+            {post.tags.length>0 && "Related Topics:"}
             {post.tags.map((tag) => (
               <span className="badge badge-secondary m-1 p-2">{tag.name}</span>
             ))}

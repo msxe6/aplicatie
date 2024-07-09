@@ -13,44 +13,47 @@ class NewPost extends Form {
     errors: { title: "", description: "", tags: [] },
     tags: [],
   };
+
   schema = {
     title: Joi.string().required().min(10).label("Title"),
     description: Joi.string().required().min(5).label("Description"),
-    tags: Joi.array(),
+    tags: Joi.array().label("Tags"),
   };
+
   handleTagChange = (tagID) => {
-    console.log("hello");
-    let data = this.state.data;
-    const newtags = data.tags;
+    const data = { ...this.state.data };
+    const newtags = [...data.tags];
     const index = newtags.indexOf(tagID);
+    console.log(index);
     if (index === -1) newtags.push(tagID);
     else newtags.splice(index, 1);
-    data = {
-      title: data.title,
-      description: data.description,
-      tags: newtags,
-    };
-    console.log(data);
+    data.tags = newtags;
+    console.log(data.tags)
     this.setState({ data });
   };
+
   async componentDidMount() {
-    let tags = await http.get(api.tagsEndPoint);
     try {
-      this.setState({ tags: tags.data });
+      const { data: tags } = await http.get(api.tagsEndPoint);
+      this.setState({ tags });
     } catch (ex) {
       if (ex.response && ex.response.status === 400) {
-        toast.error("Post Validation Failed!");
+        toast.error("Failed to load tags!");
       }
     }
   }
+
   doSubmit = async () => {
     try {
       const { data } = this.state;
-      const { response } = await createpost(data);
-      console.log(response);
+      await createpost(data);
+      console.log(data.tags)
       window.location = "/dashboard";
-    } catch (ex) {}
+    } catch (ex) {
+      toast.error("Failed to create post!");
+    }
   };
+
   render() {
     const { data, errors, tags } = this.state;
     return (
@@ -89,17 +92,14 @@ class NewPost extends Form {
                 <label htmlFor="tags">Related Tags</label>
                 <br />
                 {tags.map((tag) => (
-                  <React.Fragment>
-                    <label className="mr-3 ml-3">
-                      <input
-                        key={tag._id}
-                        className="form-check-input"
-                        type="checkbox"
-                        onChange={() => this.handleTagChange(tag._id)}
-                      />
-                      {tag.name}
-                    </label>
-                  </React.Fragment>
+                  <label className="mr-3 ml-3" key={tag._id}>
+                    <input
+                      className="form-check-input"
+                      type="checkbox"
+                      onChange={() => this.handleTagChange(tag._id)}
+                    />
+                    {tag.name}
+                  </label>
                 ))}
                 {errors.tags && <div className="alert-info">{errors.tags}</div>}
               </div>
